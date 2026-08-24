@@ -1,0 +1,6 @@
+{
+  "/api/cart/route": "app/api/cart/route.js",
+  "/page": "app/page.js",
+  "/[...slug]/page": "app/[...slug]/page.js",
+  "/products/[handle]/page": "app/products/[handle]/page.js"
+}

@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette (DARK = default theme).
+     Semantic roles: brand-black = surface, brand-white = ink. */
+  --color-brand-black: #0a0a0a;
+  --color-brand-white: #ffffff;
+  --color-brand-gray-dark: #1a1a1a;
+  --color-brand-gray-light: #f4f4f4;
+  --color-brand-accent-red: #e53935;
+  --color-brand-mpesa-green: #00a859;
+
+  /* Absolute ink — stays dark even in light mode (used on accent fills) */
+  --color-ink: #0a0a0a;
+
+  /* Typography (loaded via <link> in layout; browser-side) */
+  --font-display: "Bebas Neue", "Oswald", sans-serif;
+  --font-body: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: ui-monospace, "Roboto Mono", monospace;
+
+  /* Motion */
+  --animate-marquee: marquee 28s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+/* ─── LIGHT MODE ────────────────────────────────────────────────
+   Flip the semantic roles; every utility referencing them
+   (bg-brand-black, text-brand-white, border-brand-gray-dark…)
+   follows automatically. */
+.light {
+  --color-brand-black: #f4f4f4;
+  --color-brand-white: #0a0a0a;
+  --color-brand-gray-dark: #d4d4d4;
+  --color-brand-gray-light: #1a1a1a;
+
+  /* Keep muted text readable on light surfaces */
+  --color-neutral-400: #525252;
+  --color-neutral-500: #404040;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #737373;
+}
+
+body {
+  background: var(--color-brand-black);
+  color: var(--color-brand-white);
+}
+
+/* Brutalist selection state */
+::selection {
+  background: var(--color-brand-accent-red);
+  color: var(--color-ink);
+}
