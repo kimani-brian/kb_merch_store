@@ -7,9 +7,9 @@ import { slugify } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 const HERO_STATS = [
-  { label: "Pieces per drop", value: "050" },
-  { label: "Restocks", value: "000" },
-  { label: "Ship window", value: "48H" },
+  { label: "Authentic", value: "100%" },
+  { label: "Made in Nairobi", value: "NBO" },
+  { label: "Shipping in Kenya", value: "48H" },
 ];
 
 export default async function HomePage() {
@@ -28,27 +28,27 @@ export default async function HomePage() {
       <section className="relative border-b-2 border-brand-gray-dark">
         <div className="mx-auto flex max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 md:min-h-[70vh] lg:px-8">
           <p className="font-mono text-xs tracking-[0.35em] text-brand-accent-red uppercase">
-            /// Limited edition
+            /// Limited edition for the culture
           </p>
           <h1 className="mt-4 font-display text-6xl leading-[0.9] tracking-wide text-brand-white uppercase sm:text-8xl lg:text-9xl">
-            Drop 01
+            Not for everyone.
             <br />
-            <span className="text-neutral-600">No restocks.</span>
+            <span className="text-neutral-600">
+              Just for the ones
+              <br />
+              who get it.
+            </span>
           </h1>
           <p className="mt-6 max-w-md font-mono text-sm leading-relaxed text-neutral-400">
-            Fifty pieces. Numbered. Gone by Friday. Built for the streets of
-            Nairobi and shipped worldwide.
+            Built from the streets of Nairobi and shipped worldwide.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
               href="/shop"
               className="inline-flex items-center gap-3 border-2 border-brand-white bg-brand-white px-8 py-4 text-sm font-bold tracking-[0.2em] text-brand-black uppercase transition-colors hover:bg-brand-black hover:text-brand-white"
             >
-              Shop the drop <ArrowRight className="h-4 w-4" />
+              Get yours <ArrowRight className="h-4 w-4" />
             </Link>
-            <span className="font-mono text-xs tracking-widest text-neutral-500 uppercase">
-              Pay via M-Pesa // instant confirmation
-            </span>
           </div>
 
           {/* Stat strip */}

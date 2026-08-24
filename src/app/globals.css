@@ -53,6 +53,11 @@ body {
   color: var(--color-brand-white);
 }
 
+/* Slightly smoothed corners everywhere (overridable per-element) */
+* {
+  border-radius: 5px;
+}
+
 /* Brutalist selection state */
 ::selection {
   background: var(--color-brand-accent-red);

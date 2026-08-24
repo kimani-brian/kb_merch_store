@@ -1087,12 +1087,6 @@
   .text-brand-black {
     color: var(--color-brand-black);
   }
-  .text-brand-black\/80 {
-    color: color-mix(in srgb, #0a0a0a 80%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-brand-black) 80%, transparent);
-    }
-  }
   .text-brand-gray-dark {
     color: var(--color-brand-gray-dark);
   }
@@ -1376,6 +1370,9 @@
 body {
   background: var(--color-brand-black);
   color: var(--color-brand-white);
+}
+* {
+  border-radius: 5px;
 }
 ::selection {
   background: var(--color-brand-accent-red);
