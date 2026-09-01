@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { revalidateTag } from "next/cache";
+import { tenantForDatabase, tenantCacheTag } from "@/services/tenant.server";
 
 /**
  * Inbound webhook from the Odoo outbox dispatcher.
@@ -20,14 +21,19 @@ function verifySignature(rawBody: string, header: string | null, secret: string)
 }
 
 /** Map Odoo event types to Next.js cache tags. */
-function tagsForEvent(event: string): string[] {
-  if (/^route\./.test(event)) return ["navigation"];
-  if (/^(product|stock|category)\./.test(event)) return ["catalog"];
+function tagsForEvent(event: string, tenantId: string): string[] {
+  if (/^route\./.test(event)) return [tenantCacheTag(tenantId, "navigation")];
+  if (/^(product|stock|category)\./.test(event)) return [tenantCacheTag(tenantId, "catalog")];
   return [];
 }
 
 export async function POST(request: Request) {
-  const secret = process.env.ODOO_WEBHOOK_SECRET;
+  const database = request.headers.get("x-odoo-database");
+  const tenant = database ? await tenantForDatabase(database) : null;
+  if (database && !tenant) {
+    return Response.json({ error: "unknown tenant database" }, { status: 400 });
+  }
+  const secret = tenant?.webhookSecret ?? process.env.ODOO_WEBHOOK_SECRET;
   if (!secret) {
     console.error("[webhook] ODOO_WEBHOOK_SECRET not configured — rejecting");
     return Response.json({ error: "webhook not configured" }, { status: 500 });
@@ -42,7 +48,8 @@ export async function POST(request: Request) {
   }
 
   const event = request.headers.get("x-odoo-event") ?? "";
-  const tags = tagsForEvent(event);
+  const tenantId = tenant?.id ?? process.env.ODOO_DEFAULT_TENANT ?? "admin";
+  const tags = tagsForEvent(event, tenantId);
 
   for (const tag of tags) {
     revalidateTag(tag);

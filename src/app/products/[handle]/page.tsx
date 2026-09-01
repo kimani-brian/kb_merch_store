@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import Accordion from "@/components/product/Accordion";
 import AddToCartCTA from "@/components/product/AddToCartCTA";
 import ImageGallery from "@/components/product/ImageGallery";
-import SizeSelector from "@/components/product/SizeSelector";
 import PurchaseBlock from "@/components/product/PurchaseBlock";
 import { getProduct } from "@/services/catalogService";
 import { formatKES } from "@/lib/utils";
@@ -92,6 +91,8 @@ export default async function ProductDetailPage({ params }: PdpProps) {
           <PurchaseBlock
             productId={product.id}
             soldOut={soldOut}
+            attributes={product.attributes}
+            variants={product.variants}
           />
 
           {/* Stock signal */}

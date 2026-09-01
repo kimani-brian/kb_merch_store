@@ -1,4 +1,4 @@
-import { odooGet } from "@/services/odooClient";
+import { odooGet } from "@/services/odooServerClient";
 import type { OdooCategory, OdooProduct } from "@/types/odoo";
 
 interface ProductsResponse {

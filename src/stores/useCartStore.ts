@@ -3,14 +3,12 @@
 import { create } from "zustand";
 import type { CartLine, CartSummary } from "@/lib/cart";
 
-/** KES threshold above which delivery is free. */
-export const FREE_SHIPPING_THRESHOLD = 8000;
-
 interface CartState {
   lines: CartLine[];
   itemCount: number;
   subtotal: number;
   tax: number;
+  deliveryFee: number;
   total: number;
   /** Drawer visibility */
   isOpen: boolean;
@@ -28,6 +26,7 @@ export const useCartStore = create<CartState>((set) => ({
   itemCount: 0,
   subtotal: 0,
   tax: 0,
+  deliveryFee: 0,
   total: 0,
   isOpen: false,
   hydrated: false,
@@ -41,6 +40,7 @@ export const useCartStore = create<CartState>((set) => ({
       itemCount: summary.itemCount,
       subtotal: summary.subtotal,
       tax: summary.tax,
+      deliveryFee: summary.deliveryFee ?? 0,
       total: summary.total,
       hydrated: true,
     }),
@@ -54,6 +54,7 @@ export const useCartStore = create<CartState>((set) => ({
         itemCount: summary.itemCount ?? 0,
         subtotal: summary.subtotal ?? 0,
         tax: summary.tax ?? 0,
+        deliveryFee: summary.deliveryFee ?? 0,
         total: summary.total ?? 0,
         hydrated: true,
       });

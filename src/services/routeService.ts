@@ -1,5 +1,7 @@
-import { odooGet } from "@/services/odooClient";
+import { odooGet } from "@/services/odooServerClient";
 import type { OdooRoute } from "@/types/odoo";
+import { getCategories } from "@/services/catalogService";
+import { slugify } from "@/lib/utils";
 
 /**
  * Fetch the full navigation route tree managed in Odoo.
@@ -24,6 +26,25 @@ export async function resolveRoute(
     const candidate = `/${segments.join("/")}`;
     const match = routes.find((r) => r.slug === candidate);
     if (match) return match;
+
+    // Keep older categories reachable when their route predates automatic
+    // category-route creation.
+    const category = (await getCategories()).find(
+      (item) => `/${slugify(item.name)}` === candidate,
+    );
+    if (category) {
+      return {
+        id: -category.id,
+        name: category.name,
+        slug: candidate,
+        parent_id: null,
+        page_type: "category",
+        seo_title: null,
+        seo_description: null,
+        sequence: 20,
+        active: true,
+      };
+    }
     segments = segments.slice(0, -1);
   }
   return null;

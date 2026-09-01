@@ -1,10 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
-const INTERNAL_BASE =
-  process.env.ODOO_INTERNAL_URL ?? "http://localhost:8884";
-const ODOO_DB = process.env.ODOO_DB_NAME ?? "admin";
-const CART_COOKIE = "kb_cart_token";
+import { getTenant, tenantCartCookie } from "@/services/tenant.server";
+import { odooRequest } from "@/services/odooServerClient";
 
 /**
  * GET /api/payment/stk/status?request_id=N
@@ -17,15 +14,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "request_id required" }, { status: 400 });
   }
 
-  const res = await fetch(
-    `${INTERNAL_BASE}/api/v1/payment/mpesa/stk/status?request_id=${encodeURIComponent(requestId)}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "X-Odoo-Database": ODOO_DB,
-      },
-      cache: "no-store",
-    },
+  const res = await odooRequest(
+    `/api/v1/payment/mpesa/stk/status?request_id=${encodeURIComponent(requestId)}`,
+    { cache: "no-store" },
   );
   const data = await res.json().catch(() => null);
   if (!res.ok || data?.error) {
@@ -39,8 +30,9 @@ export async function GET(request: Request) {
 
   // Payment confirmed → expire the cart session cookie and reset client cart.
   if (data.status === "paid") {
+    const tenant = await getTenant();
     const cookieStore = await cookies();
-    cookieStore.set(CART_COOKIE, "", {
+    cookieStore.set(tenantCartCookie(tenant), "", {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",

@@ -18,9 +18,7 @@ export default async function HomePage() {
     getProducts({ limit: 8 }),
   ]);
 
-  const shopCategories = categories
-    .filter((c) => c.products_count > 0 && c.name !== "All" && c.name !== "Expenses")
-    .slice(0, 4);
+  const shopCategories = categories;
 
   return (
     <div>

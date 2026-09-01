@@ -61,7 +61,7 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        <FreeShippingBar subtotal={subtotal} />
+        <FreeShippingBar subtotal={total} />
 
         {/* Lines */}
         <div className="flex-1 overflow-y-auto px-5">

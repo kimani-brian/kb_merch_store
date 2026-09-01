@@ -1,11 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { emptySummary, type CartLine, type CartSummary } from "@/lib/cart";
-
-const INTERNAL_BASE =
-  process.env.ODOO_INTERNAL_URL ?? "http://localhost:8884";
-const ODOO_DB = process.env.ODOO_DB_NAME ?? "admin";
-const CART_COOKIE = "kb_cart_token";
+import { getTenant, tenantCartCookie } from "@/services/tenant.server";
+import { odooRequest } from "@/services/odooServerClient";
 
 interface OdooLine {
   id: number;
@@ -23,6 +20,7 @@ interface OdooCart {
   lines?: OdooLine[];
   subtotal?: number;
   tax?: number;
+  delivery_fee?: number;
   total?: number;
 }
 
@@ -43,6 +41,7 @@ function toSummary(data: OdooCart | null): CartSummary {
     itemCount: data.lines.reduce((s, l) => s + l.qty, 0),
     subtotal: data.subtotal ?? 0,
     tax: data.tax ?? 0,
+    deliveryFee: data.delivery_fee ?? 0,
     total: data.total ?? 0,
   };
 }
@@ -51,14 +50,11 @@ async function odooCart(
   path: string,
   body: Record<string, unknown>,
 ): Promise<{ res: Response; data: (OdooCart & { error?: string }) | null }> {
-  const token = (await cookies()).get(CART_COOKIE)?.value;
-  const res = await fetch(`${INTERNAL_BASE}${path}`, {
+  const tenant = await getTenant();
+  const token = (await cookies()).get(tenantCartCookie(tenant))?.value;
+  const res = await odooRequest(path, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Odoo-Database": ODOO_DB,
-      ...(token ? { Cookie: `cart_token=${token}` } : {}),
-    },
+    headers: token ? { Cookie: `cart_token=${token}` } : undefined,
     body: JSON.stringify(body),
   });
   const data = (await res.json().catch(() => null)) as
@@ -73,15 +69,17 @@ async function odooCart(
  * if the stored token is stale, Odoo rotates it and we refresh the cookie.
  */
 export async function GET() {
+  const tenant = await getTenant();
+  const cartCookie = tenantCartCookie(tenant);
   const cookieStore = await cookies();
-  const token = cookieStore.get(CART_COOKIE)?.value;
+  const token = cookieStore.get(cartCookie)?.value;
   if (!token) return NextResponse.json(emptySummary());
 
   const { res, data } = await odooCart("/api/v1/cart/get", {});
   if (!res.ok || !data) return NextResponse.json(emptySummary());
 
   if (data.cart_token && data.cart_token !== token) {
-    cookieStore.set(CART_COOKIE, data.cart_token, {
+    cookieStore.set(cartCookie, data.cart_token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -117,10 +115,12 @@ export async function POST(request: Request) {
     );
   }
 
+  const tenant = await getTenant();
+  const cartCookie = tenantCartCookie(tenant);
   const cookieStore = await cookies();
-  const oldToken = cookieStore.get(CART_COOKIE)?.value;
+  const oldToken = cookieStore.get(cartCookie)?.value;
   if (data.cart_token !== oldToken) {
-    cookieStore.set(CART_COOKIE, data.cart_token, {
+    cookieStore.set(cartCookie, data.cart_token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -129,13 +129,9 @@ export async function POST(request: Request) {
     });
   }
 
-  const summaryRes = await fetch(`${INTERNAL_BASE}/api/v1/cart/get`, {
+  const summaryRes = await odooRequest("/api/v1/cart/get", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Odoo-Database": ODOO_DB,
-      Cookie: `cart_token=${data.cart_token}`,
-    },
+    headers: { Cookie: `cart_token=${data.cart_token}` },
     body: JSON.stringify({}),
   });
   const summary = toSummary(

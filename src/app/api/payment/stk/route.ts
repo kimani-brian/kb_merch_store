@@ -1,10 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
-const INTERNAL_BASE =
-  process.env.ODOO_INTERNAL_URL ?? "http://localhost:8884";
-const ODOO_DB = process.env.ODOO_DB_NAME ?? "admin";
-const CART_COOKIE = "kb_cart_token";
+import { getTenant, tenantCartCookie } from "@/services/tenant.server";
+import { odooRequest } from "@/services/odooServerClient";
 
 /**
  * POST /api/payment/stk — initiate an M-Pesa STK push.
@@ -21,23 +18,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "phone required" }, { status: 400 });
   }
 
-  const token = (await cookies()).get(CART_COOKIE)?.value;
+  const tenant = await getTenant();
+  const token = (await cookies()).get(tenantCartCookie(tenant))?.value;
   if (!token) {
     return NextResponse.json({ error: "no active cart" }, { status: 400 });
   }
 
-  const res = await fetch(
-    `${INTERNAL_BASE}/api/v1/payment/mpesa/stk/initiate`,
-    {
+  const res = await odooRequest("/api/v1/payment/mpesa/stk/initiate", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Odoo-Database": ODOO_DB,
-        Cookie: `cart_token=${token}`,
-      },
+      headers: { Cookie: `cart_token=${token}` },
       body: JSON.stringify({ cart_token: token, phone: body.phone }),
-    },
-  );
+  });
   const data = await res.json().catch(() => null);
   if (!res.ok || data?.error) {
     return NextResponse.json(

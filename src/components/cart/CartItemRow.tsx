@@ -12,26 +12,34 @@ export default function CartItemRow({ line }: { line: CartLine }) {
   const setCart = useCartStore((s) => s.setCart);
 
   async function mutate(method: "PATCH" | "DELETE", body: object) {
-    // Optimistic update
+    // Optimistic update; totals re-sync from Odoo after the mutation.
     const prev = useCartStore.getState();
+    const snapshot = {
+      lines: prev.lines,
+      itemCount: prev.itemCount,
+      subtotal: prev.subtotal,
+      tax: prev.tax,
+      deliveryFee: prev.deliveryFee,
+      total: prev.total,
+    };
     if (method === "DELETE") {
       setCart({
-        lines: prev.lines.filter((l) => l.lineId !== line.lineId),
-        itemCount:
-          prev.itemCount - line.qty,
-        subtotal: prev.subtotal - line.lineTotal,
-        tax: Math.round((prev.subtotal - line.lineTotal) * 0.16),
-        total:
-          Math.round((prev.subtotal - line.lineTotal) * 1.16),
+        ...snapshot,
+        lines: snapshot.lines.filter((l) => l.lineId !== line.lineId),
+        itemCount: snapshot.itemCount - line.qty,
+        subtotal: snapshot.subtotal - line.lineTotal,
+        total: snapshot.total - line.lineTotal,
       });
     } else {
+      const newQty = (body as { qty: number }).qty;
       setCart({
-        ...prev,
-        lines: prev.lines.map((l) =>
-          l.lineId === line.lineId ? { ...l, qty: (body as { qty: number }).qty } : l,
+        ...snapshot,
+        lines: snapshot.lines.map((l) =>
+          l.lineId === line.lineId ? { ...l, qty: newQty } : l,
         ),
-        itemCount:
-          prev.itemCount - line.qty + (body as { qty: number }).qty,
+        itemCount: snapshot.itemCount - line.qty + newQty,
+        subtotal: snapshot.subtotal - line.lineTotal + newQty * line.priceUnit,
+        total: snapshot.total - line.lineTotal + newQty * line.priceUnit,
       });
     }
 
@@ -44,22 +52,10 @@ export default function CartItemRow({ line }: { line: CartLine }) {
       if (res.ok) {
         setCart(await res.json());
       } else {
-        setCart({
-          lines: prev.lines,
-          itemCount: prev.itemCount,
-          subtotal: prev.subtotal,
-          tax: prev.tax,
-          total: prev.total,
-        }); // rollback
+        setCart(snapshot); // rollback
       }
     } catch {
-      setCart({
-        lines: prev.lines,
-        itemCount: prev.itemCount,
-        subtotal: prev.subtotal,
-        tax: prev.tax,
-        total: prev.total,
-      });
+      setCart(snapshot);
     }
   }
 

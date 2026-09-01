@@ -24,7 +24,37 @@ export interface OdooProduct {
   image_url: string;
   qty_available: number;
   sale_ok: boolean;
+  attributes: OdooProductAttribute[];
+  variants: OdooProductVariant[];
   create_date?: string;
+}
+
+export interface OdooProductAttributeValue {
+  id: number;
+  name: string;
+}
+
+export interface OdooProductAttribute {
+  id: number;
+  name: string;
+  create_variant: "always" | "dynamic" | "no_variant" | string;
+  values: OdooProductAttributeValue[];
+}
+
+export interface OdooProductVariantAttribute {
+  attribute_id: number;
+  attribute: string;
+  value_id: number;
+  value: string;
+}
+
+export interface OdooProductVariant {
+  id: number;
+  name: string;
+  default_code: string | false | null;
+  qty_available: number;
+  sale_ok: boolean;
+  attributes: OdooProductVariantAttribute[];
 }
 
 export interface OdooCategory {

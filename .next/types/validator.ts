@@ -110,6 +110,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/odoo-image/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/odoo-image">> = Specific
+  const handler = {} as typeof import("../../src/app/api/odoo-image/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/payment/stk/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/payment/stk">> = Specific

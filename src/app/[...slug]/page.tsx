@@ -28,8 +28,8 @@ export default async function CatchAllPage({ params }: CatchAllProps) {
   const allCategories = await getCategories();
   const target = slugify(route.slug.split("/").pop() ?? "");
   const categories =
-    route.page_type === "category"
-      ? allCategories.filter((c) => c.products_count > 0 && slugify(c.name) === target)
+      route.page_type === "category"
+      ? allCategories.filter((c) => slugify(c.name) === target)
       : [];
 
   const products =

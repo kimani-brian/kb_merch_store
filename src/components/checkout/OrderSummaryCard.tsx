@@ -4,17 +4,15 @@ import Link from "next/link";
 import { useCartStore } from "@/stores/useCartStore";
 import { formatKES } from "@/lib/utils";
 
-const FLAT_DELIVERY_FEE = 300;
-export const FREE_SHIPPING_THRESHOLD = 8000;
-
 export default function OrderSummaryCard() {
   const lines = useCartStore((s) => s.lines);
   const subtotal = useCartStore((s) => s.subtotal);
   const tax = useCartStore((s) => s.tax);
+  const deliveryFee = useCartStore((s) => s.deliveryFee);
+  const total = useCartStore((s) => s.total);
 
-  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const deliveryFee = lines.length === 0 || freeShipping ? 0 : FLAT_DELIVERY_FEE;
-  const total = subtotal + tax + deliveryFee;
+  // Delivery is free whenever Odoo charged nothing for it
+  const freeShipping = lines.length > 0 && deliveryFee === 0;
 
   return (
     <aside
@@ -53,13 +51,13 @@ export default function OrderSummaryCard() {
           <dd>{formatKES(subtotal)}</dd>
         </div>
         <div className="flex justify-between text-neutral-400">
-          <dt className="uppercase">VAT (16%)</dt>
+          <dt className="uppercase">VAT</dt>
           <dd>{formatKES(tax)}</dd>
         </div>
         <div className="flex justify-between text-neutral-400">
           <dt className="uppercase">Delivery</dt>
           <dd className={freeShipping ? "text-brand-mpesa-green" : ""}>
-            {deliveryFee === 0 ? "FREE" : formatKES(deliveryFee)}
+            {lines.length === 0 ? "—" : freeShipping ? "FREE" : formatKES(deliveryFee)}
           </dd>
         </div>
         <div className="flex justify-between border-t-2 border-brand-gray-dark pt-3 text-base font-bold text-brand-white">
@@ -71,9 +69,6 @@ export default function OrderSummaryCard() {
       <p className="border-t-2 border-brand-gray-dark px-5 py-3 text-center font-mono text-[10px] tracking-widest text-neutral-600 uppercase">
         Final charge happens on M-Pesa PIN confirmation
       </p>
-
-      {/* Hidden total for the payment box */}
-      <data id="checkout-total" value={total} className="hidden" />
     </aside>
   );
 }

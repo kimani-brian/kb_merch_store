@@ -8,9 +8,6 @@ import { useCheckoutStore, isValidKenyanPhone } from "@/stores/useCheckoutStore"
 import { useCartStore } from "@/stores/useCartStore";
 import { formatKES } from "@/lib/utils";
 
-const FLAT_DELIVERY_FEE = 300;
-const FREE_SHIPPING_THRESHOLD = 8000;
-
 export default function MPesaPaymentBox() {
   const router = useRouter();
   const [payPhone, setPayPhone] = useState("");
@@ -21,9 +18,8 @@ export default function MPesaPaymentBox() {
   const startPayment = useCheckoutStore((s) => s.startPayment);
 
   const lines = useCartStore((s) => s.lines);
-  const subtotal = useCartStore((s) => s.subtotal);
-  const tax = useCartStore((s) => s.tax);
   const itemCount = useCartStore((s) => s.itemCount);
+  const total = useCartStore((s) => s.total);
   const setCart = useCartStore((s) => s.setCart);
 
   const detailsValid =
@@ -34,12 +30,6 @@ export default function MPesaPaymentBox() {
   const phoneValid = isValidKenyanPhone(payPhone);
   const canPay = detailsValid && phoneValid && lines.length > 0;
 
-  const deliveryFee =
-    lines.length === 0 || subtotal >= FREE_SHIPPING_THRESHOLD
-      ? 0
-      : FLAT_DELIVERY_FEE;
-  const total = subtotal + tax + deliveryFee;
-
   async function pay() {
     if (!canPay || stkState !== "idle") return;
     // Sync the payment phone into the checkout details before firing.
@@ -47,7 +37,7 @@ export default function MPesaPaymentBox() {
     await useCheckoutStore.getState().startPayment(
       (orderName, txnId) => {
         // Reset the local cart (server already expired the cookie).
-        setCart({ lines: [], itemCount: 0, subtotal: 0, tax: 0, total: 0 });
+        setCart({ lines: [], itemCount: 0, subtotal: 0, tax: 0, deliveryFee: 0, total: 0 });
         router.push(
           `/checkout/success?order=${encodeURIComponent(orderName)}&txn=${encodeURIComponent(txnId ?? "")}&total=${total}`,
         );
